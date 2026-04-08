@@ -26,7 +26,7 @@ function DepositForm() {
     try {
       const res = await api.deposit(accountId.trim(), parseFloat(amount));
       setResult({ balance: res.balance! });
-      toast.success(`Deposited $${parseFloat(amount).toFixed(2)} successfully`);
+      toast.success(`Deposited ৳${parseFloat(amount).toFixed(2)} successfully`);
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
       toast.error((err as ApiError).error || "Deposit failed");
@@ -51,7 +51,7 @@ function DepositForm() {
       {result && (
         <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm">
           <CheckCircle2 className="h-4 w-4 text-accent" />
-          <span>New balance: <strong className="font-mono">${result.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+          <span>New balance: <strong className="font-mono">৳{result.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
         </div>
       )}
     </div>
@@ -75,7 +75,7 @@ function WithdrawForm() {
     try {
       const res = await api.withdraw(accountId.trim(), parseFloat(amount));
       setResult({ balance: res.balance! });
-      toast.success(`Withdrew $${parseFloat(amount).toFixed(2)} successfully`);
+      toast.success(`Withdrew ৳${parseFloat(amount).toFixed(2)} successfully`);
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
       toast.error((err as ApiError).error || "Withdrawal failed");
@@ -100,7 +100,7 @@ function WithdrawForm() {
       {result && (
         <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm">
           <CheckCircle2 className="h-4 w-4 text-accent" />
-          <span>New balance: <strong className="font-mono">${result.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+          <span>New balance: <strong className="font-mono">৳{result.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
         </div>
       )}
     </div>
@@ -120,7 +120,7 @@ function TransferForm() {
       toast.error("All fields required with a positive amount");
       return;
     }
-    if (fromId.trim() === toId.trim()) {
+    if (fromId.trim().toUpperCase() === toId.trim().toUpperCase()) {
       toast.error("Source and destination must differ");
       return;
     }
@@ -129,7 +129,7 @@ function TransferForm() {
     try {
       const res = await api.transfer(fromId.trim(), toId.trim(), parseFloat(amount));
       setResult({ from: res.fromAccount.balance, to: res.toAccount.balance });
-      toast.success(`Transferred $${parseFloat(amount).toFixed(2)} successfully`);
+      toast.success(`Transferred ৳${parseFloat(amount).toFixed(2)} successfully`);
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
       toast.error((err as ApiError).error || "Transfer failed");
@@ -159,10 +159,10 @@ function TransferForm() {
         <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm space-y-1">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-accent" />
-            <span>From balance: <strong className="font-mono">${result.from.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+            <span>From balance: <strong className="font-mono">৳{result.from.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
           </div>
           <div className="flex items-center gap-2 pl-6">
-            <span>To balance: <strong className="font-mono">${result.to.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+            <span>To balance: <strong className="font-mono">৳{result.to.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
           </div>
         </div>
       )}

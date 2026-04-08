@@ -3,9 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, RefreshCw, User, Hash, DollarSign, GitBranch } from "lucide-react";
+import { ArrowLeft, RefreshCw, User, Hash, Landmark } from "lucide-react";
 
 export default function AccountDetail() {
   const { id } = useParams<{ id: string }>();
@@ -74,19 +73,12 @@ export default function AccountDetail() {
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-lg border p-4">
-                <DollarSign className="h-5 w-5 text-accent" />
+                <Landmark className="h-5 w-5 text-accent" />
                 <div>
                   <p className="text-xs text-muted-foreground">Balance</p>
                   <p className="font-mono text-lg font-bold">
-                    ${parseFloat(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    ৳{parseFloat(account.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-lg border p-4">
-                <GitBranch className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Version</p>
-                  <Badge variant="secondary">{account.version}</Badge>
                 </div>
               </div>
             </div>

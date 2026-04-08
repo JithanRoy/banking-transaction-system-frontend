@@ -26,6 +26,50 @@ export interface ApiError {
   code: string;
 }
 
+type RawAccount = {
+  account_id?: string;
+  accountId?: string;
+  holder_name?: string;
+  holderName?: string;
+  balance?: string | number;
+  version?: number;
+};
+
+function normalizeAccountId(value: string): string {
+  return value.trim().toUpperCase();
+}
+
+function normalizeAccount(raw: RawAccount): Account {
+  return {
+    account_id: normalizeAccountId(raw.account_id ?? raw.accountId ?? ""),
+    holder_name: raw.holder_name ?? raw.holderName ?? "",
+    balance: String(raw.balance ?? "0"),
+    version: raw.version ?? 0,
+  };
+}
+
+function normalizeAccountsResponse(payload: unknown): Account[] {
+  if (Array.isArray(payload)) {
+    return payload.map((item) => normalizeAccount(item as RawAccount));
+  }
+
+  if (payload && typeof payload === "object") {
+    const candidate = (payload as { accounts?: unknown; data?: unknown; results?: unknown }).accounts
+      ?? (payload as { accounts?: unknown; data?: unknown; results?: unknown }).data
+      ?? (payload as { accounts?: unknown; data?: unknown; results?: unknown }).results;
+
+    if (Array.isArray(candidate)) {
+      return candidate.map((item) => normalizeAccount(item as RawAccount));
+    }
+  }
+
+  return [];
+}
+
+function normalizeAccountResponse(payload: unknown): Account {
+  return normalizeAccount(payload as RawAccount);
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${url}`, {
     headers: { "Content-Type": "application/json" },
@@ -42,29 +86,39 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  listAccounts: async () => normalizeAccountsResponse(await request<unknown>("/accounts")),
+
   createAccount: (data: { accountId: string; holderName: string; balance: number }) =>
-    request<{ message: string }>("/accounts", {
+    request<{ message: string }>("/accounts/create", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        ...data,
+        accountId: normalizeAccountId(data.accountId),
+      }),
     }),
 
-  getAccount: (id: string) => request<Account>(`/accounts/${id}`),
+  getAccount: async (id: string) =>
+    normalizeAccountResponse(await request<unknown>(`/accounts/${normalizeAccountId(id)}`)),
 
   deposit: (accountId: string, amount: number) =>
     request<TransactionResult>("/transactions/deposit", {
       method: "POST",
-      body: JSON.stringify({ accountId, amount }),
+      body: JSON.stringify({ accountId: normalizeAccountId(accountId), amount }),
     }),
 
   withdraw: (accountId: string, amount: number) =>
     request<TransactionResult>("/transactions/withdraw", {
       method: "POST",
-      body: JSON.stringify({ accountId, amount }),
+      body: JSON.stringify({ accountId: normalizeAccountId(accountId), amount }),
     }),
 
   transfer: (fromAccountId: string, toAccountId: string, amount: number) =>
     request<TransferResult>("/transactions/transfer", {
       method: "POST",
-      body: JSON.stringify({ fromAccountId, toAccountId, amount }),
+      body: JSON.stringify({
+        fromAccountId: normalizeAccountId(fromAccountId),
+        toAccountId: normalizeAccountId(toAccountId),
+        amount,
+      }),
     }),
 };

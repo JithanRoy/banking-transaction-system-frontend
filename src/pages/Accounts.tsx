@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,6 @@ import {
 export default function Accounts() {
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState("");
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -36,17 +36,31 @@ export default function Accounts() {
   const [newName, setNewName] = useState("");
   const [newBalance, setNewBalance] = useState("");
   const [creating, setCreating] = useState(false);
+  const [searchedAccount, setSearchedAccount] = useState<Account | null>(null);
+
+  const {
+    data: accounts = [],
+    isLoading: accountsLoading,
+    isError: accountsError,
+    refetch: refetchAccounts,
+  } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: api.listAccounts,
+  });
+
+  const visibleAccounts = searchedAccount
+    ? [
+        searchedAccount,
+        ...accounts.filter((account) => account.account_id !== searchedAccount.account_id),
+      ]
+    : accounts;
 
   const searchAccount = async () => {
     if (!searchId.trim()) return;
     setLoading(true);
     try {
       const acc = await api.getAccount(searchId.trim());
-      setAccounts((prev) => {
-        const exists = prev.find((a) => a.account_id === acc.account_id);
-        if (exists) return prev.map((a) => (a.account_id === acc.account_id ? acc : a));
-        return [acc, ...prev];
-      });
+      setSearchedAccount(acc);
     } catch (err) {
       const e = err as ApiError;
       toast.error(e.error || "Account not found");
@@ -72,11 +86,8 @@ export default function Accounts() {
       setNewId("");
       setNewName("");
       setNewBalance("");
-      // Fetch the new account
-      try {
-        const acc = await api.getAccount(newId.trim());
-        setAccounts((prev) => [acc, ...prev]);
-      } catch {}
+      setSearchedAccount(null);
+      await refetchAccounts();
     } catch (err) {
       const e = err as ApiError;
       toast.error(e.error || "Failed to create account");
@@ -149,7 +160,7 @@ export default function Accounts() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Lookup Account</CardTitle>
+          <CardTitle className="text-base">Available Accounts</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -167,7 +178,19 @@ export default function Accounts() {
         </CardContent>
       </Card>
 
-      {accounts.length > 0 && (
+      {accountsLoading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Loading accounts...</p>
+          </CardContent>
+        </Card>
+      ) : accountsError ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-destructive">Failed to load accounts.</p>
+          </CardContent>
+        </Card>
+      ) : visibleAccounts.length > 0 ? (
         <Card>
           <CardContent className="pt-6">
             <Table>
@@ -176,12 +199,11 @@ export default function Accounts() {
                   <TableHead>Account ID</TableHead>
                   <TableHead>Holder Name</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="text-right">Version</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {accounts.map((acc) => (
+                {visibleAccounts.map((acc) => (
                   <TableRow
                     key={acc.account_id}
                     className="cursor-pointer"
@@ -190,9 +212,8 @@ export default function Accounts() {
                     <TableCell className="font-mono font-medium">{acc.account_id}</TableCell>
                     <TableCell>{acc.holder_name}</TableCell>
                     <TableCell className="text-right font-mono">
-                      ${parseFloat(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      ৳{parseFloat(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">{acc.version}</TableCell>
                     <TableCell>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
@@ -200,6 +221,12 @@ export default function Accounts() {
                 ))}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">No accounts available.</p>
           </CardContent>
         </Card>
       )}
