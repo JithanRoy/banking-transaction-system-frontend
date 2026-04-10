@@ -36,7 +36,6 @@ export default function AccountDetail() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Account Details</h1>
-          <p className="text-muted-foreground text-sm">{id}</p>
         </div>
       </div>
 

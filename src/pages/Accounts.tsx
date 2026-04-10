@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,6 +35,8 @@ import { toast } from "sonner";
 
 export default function Accounts() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [searchId, setSearchId] = useState("");
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -39,14 +48,22 @@ export default function Accounts() {
   const [searchedAccount, setSearchedAccount] = useState<Account | null>(null);
 
   const {
-    data: accounts = [],
+    data,
     isLoading: accountsLoading,
     isError: accountsError,
     refetch: refetchAccounts,
   } = useQuery({
-    queryKey: ["accounts"],
-    queryFn: api.listAccounts,
+    queryKey: ["accounts", page, limit],
+    queryFn: () => api.listAccounts(page, limit),
   });
+
+  const accounts = data?.accounts ?? [];
+  const pagination = data?.pagination ?? {
+    page,
+    limit,
+    total: accounts.length,
+    totalPages: 1,
+  };
 
   const visibleAccounts = searchedAccount
     ? [
@@ -84,6 +101,7 @@ export default function Accounts() {
         balance: parseFloat(newBalance),
       });
       toast.success("Account created successfully");
+      setPage(1);
       setDialogOpen(false);
       setNewId("");
       setNewName("");
@@ -232,6 +250,50 @@ export default function Accounts() {
                 ))}
               </TableBody>
             </Table>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                Page {pagination.page} of {pagination.totalPages} | Total{" "}
+                {pagination.total} accounts
+              </p>
+              <Pagination className="mx-0 w-auto justify-start sm:justify-end">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (pagination.page > 1) {
+                          setPage((current) => Math.max(1, current - 1));
+                        }
+                      }}
+                      className={
+                        pagination.page <= 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (pagination.page < pagination.totalPages) {
+                          setPage((current) =>
+                            Math.min(pagination.totalPages, current + 1),
+                          );
+                        }
+                      }}
+                      className={
+                        pagination.page >= pagination.totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </CardContent>
         </Card>
       ) : (
