@@ -220,13 +220,7 @@ export default function Accounts() {
                     </TableCell>
                     <TableCell>{acc.holder_name}</TableCell>
                     <TableCell className="text-right font-mono">
-                      $
-                      {parseFloat(acc.balance).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {acc.version}৳
+                      ৳
                       {parseFloat(acc.balance).toLocaleString("en-US", {
                         minimumFractionDigits: 2,
                       })}

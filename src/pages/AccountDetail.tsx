@@ -95,7 +95,7 @@ export default function AccountDetail() {
                 <div>
                   <p className="text-xs text-muted-foreground">Balance</p>
                   <p className="font-mono text-lg font-bold">
-                    $
+                    ৳
                     {parseFloat(account.balance).toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                     })}
