@@ -1,34 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { AccountsSearchCard } from "@/components/accounts/AccountsSearchCard";
+import { AccountsTableCard } from "@/components/accounts/AccountsTableCard";
+import { CreateAccountDialog } from "@/components/accounts/CreateAccountDialog";
+import { DeleteAccountDialog } from "@/components/accounts/DeleteAccountDialog";
+import { UpdateAccountDialog } from "@/components/accounts/UpdateAccountDialog";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Card, CardContent } from "@/components/ui/card";
 import { Account, api, ApiError } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -46,6 +24,13 @@ export default function Accounts() {
   const [newBalance, setNewBalance] = useState("");
   const [creating, setCreating] = useState(false);
   const [searchedAccount, setSearchedAccount] = useState<Account | null>(null);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editBalance, setEditBalance] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     data,
@@ -116,6 +101,67 @@ export default function Accounts() {
     }
   };
 
+  const openEditDialog = (account: Account) => {
+    setEditingAccount(account);
+    setEditName(account.holder_name);
+    setEditBalance(account.balance);
+    setEditDialogOpen(true);
+  };
+
+  const updateAccount = async () => {
+    if (!editingAccount) return;
+
+    const nextName = editName.trim();
+    const nextBalance = editBalance.trim();
+
+    if (!nextName && !nextBalance) {
+      toast.error("Provide holder name and/or balance");
+      return;
+    }
+
+    if (nextBalance && Number(nextBalance) < 0) {
+      toast.error("Balance must be 0 or greater");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      await api.updateAccount(editingAccount.account_id, {
+        ...(nextName ? { holderName: nextName } : {}),
+        ...(nextBalance ? { balance: Number(nextBalance) } : {}),
+      });
+      toast.success("Account updated successfully");
+      setEditDialogOpen(false);
+      setEditingAccount(null);
+      await refetchAccounts();
+    } catch (err) {
+      const e = err as ApiError;
+      toast.error(e.error || "Failed to update account");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!deletingAccount) return;
+
+    setDeleting(true);
+    try {
+      await api.deleteAccount(deletingAccount.account_id);
+      toast.success("Account deleted successfully");
+      setDeletingAccount(null);
+      setSearchedAccount((current) =>
+        current?.account_id === deletingAccount.account_id ? null : current,
+      );
+      await refetchAccounts();
+    } catch (err) {
+      const e = err as ApiError;
+      toast.error(e.error || "Failed to delete account");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -125,87 +171,43 @@ export default function Accounts() {
             Manage banking accounts
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-1.5" /> Create Account
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Account</DialogTitle>
-              <DialogDescription>
-                Fill in the details below to create a new banking account.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="acc-id">Account ID</Label>
-                <Input
-                  id="acc-id"
-                  placeholder="e.g. ACC1001"
-                  value={newId}
-                  onChange={(e) => setNewId(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="acc-name">Holder Name</Label>
-                <Input
-                  id="acc-name"
-                  placeholder="e.g. John Doe"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="acc-balance">Initial Balance</Label>
-                <Input
-                  id="acc-balance"
-                  type="number"
-                  min="0"
-                  placeholder="e.g. 1000"
-                  value={newBalance}
-                  onChange={(e) => setNewBalance(e.target.value)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={createAccount} disabled={creating}>
-                {creating ? "Creating..." : "Create Account"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <CreateAccountDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          newId={newId}
+          newName={newName}
+          newBalance={newBalance}
+          setNewId={setNewId}
+          setNewName={setNewName}
+          setNewBalance={setNewBalance}
+          creating={creating}
+          onCreate={createAccount}
+        />
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Available Accounts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter Account ID (e.g. ACC1001)"
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && searchAccount()}
-            />
-            <Button
-              onClick={searchAccount}
-              disabled={loading}
-              variant="secondary"
-            >
-              <Search className="h-4 w-4 mr-1.5" />
-              {loading ? "Searching..." : "Search"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <UpdateAccountDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        accountId={editingAccount?.account_id}
+        name={editName}
+        balance={editBalance}
+        setName={setEditName}
+        setBalance={setEditBalance}
+        updating={updating}
+        onUpdate={updateAccount}
+      />
+
+      <AccountsSearchCard
+        searchId={searchId}
+        setSearchId={setSearchId}
+        loading={loading}
+        onSearch={searchAccount}
+      />
 
       {accountsLoading ? (
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Loading accounts...</p>
+          <CardContent>
+            <LoadingSpinner message="Loading accounts..." size="md" />
           </CardContent>
         </Card>
       ) : accountsError ? (
@@ -215,87 +217,25 @@ export default function Accounts() {
           </CardContent>
         </Card>
       ) : visibleAccounts.length > 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Account ID</TableHead>
-                  <TableHead>Holder Name</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="w-10" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visibleAccounts.map((acc) => (
-                  <TableRow
-                    key={acc.account_id}
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/accounts/${acc.account_id}`)}
-                  >
-                    <TableCell className="font-mono font-medium">
-                      {acc.account_id}
-                    </TableCell>
-                    <TableCell>{acc.holder_name}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      ৳
-                      {parseFloat(acc.balance).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-muted-foreground">
-                Page {pagination.page} of {pagination.totalPages} | Total{" "}
-                {pagination.total} accounts
-              </p>
-              <Pagination className="mx-0 w-auto justify-start sm:justify-end">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (pagination.page > 1) {
-                          setPage((current) => Math.max(1, current - 1));
-                        }
-                      }}
-                      className={
-                        pagination.page <= 1
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (pagination.page < pagination.totalPages) {
-                          setPage((current) =>
-                            Math.min(pagination.totalPages, current + 1),
-                          );
-                        }
-                      }}
-                      className={
-                        pagination.page >= pagination.totalPages
-                          ? "pointer-events-none opacity-50"
-                          : ""
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </CardContent>
-        </Card>
+        <AccountsTableCard
+          accounts={visibleAccounts}
+          pagination={pagination}
+          onOpenAccount={(accountId) => navigate(`/accounts/${accountId}`)}
+          onEdit={openEditDialog}
+          onDelete={setDeletingAccount}
+          onPreviousPage={() => {
+            if (pagination.page > 1) {
+              setPage((current) => Math.max(1, current - 1));
+            }
+          }}
+          onNextPage={() => {
+            if (pagination.page < pagination.totalPages) {
+              setPage((current) =>
+                Math.min(pagination.totalPages, current + 1),
+              );
+            }
+          }}
+        />
       ) : (
         <Card>
           <CardContent className="pt-6">
@@ -305,6 +245,16 @@ export default function Accounts() {
           </CardContent>
         </Card>
       )}
+
+      <DeleteAccountDialog
+        open={Boolean(deletingAccount)}
+        accountId={deletingAccount?.account_id}
+        deleting={deleting}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeletingAccount(null);
+        }}
+        onConfirmDelete={deleteAccount}
+      />
     </div>
   );
 }

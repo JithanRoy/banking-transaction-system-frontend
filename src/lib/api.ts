@@ -2,6 +2,7 @@ const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export interface Account {
+  id?: number;
   account_id: string;
   holder_name: string;
   balance: string;
@@ -40,6 +41,7 @@ export interface ApiError {
 }
 
 type RawAccount = {
+  id?: number;
   account_id?: string;
   accountId?: string;
   holder_name?: string;
@@ -54,6 +56,7 @@ function normalizeAccountId(value: string): string {
 
 function normalizeAccount(raw: RawAccount): Account {
   return {
+    id: raw.id,
     account_id: normalizeAccountId(raw.account_id ?? raw.accountId ?? ""),
     holder_name: raw.holder_name ?? raw.holderName ?? "",
     balance: String(raw.balance ?? "0"),
@@ -147,6 +150,23 @@ export const api = {
         ...data,
         accountId: normalizeAccountId(data.accountId),
       }),
+    }),
+
+  updateAccount: (
+    accountId: string,
+    data: { holderName?: string; balance?: number },
+  ) =>
+    request<{ message: string }>(
+      `/accounts/update/${normalizeAccountId(accountId)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      },
+    ),
+
+  deleteAccount: (accountId: string) =>
+    request<{ message: string }>(`/accounts/${normalizeAccountId(accountId)}`, {
+      method: "DELETE",
     }),
 
   getAccount: async (id: string) =>

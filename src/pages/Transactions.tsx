@@ -82,15 +82,6 @@ function DepositForm() {
               })}
             </strong>
           </span>
-          <span>
-            New balance:{" "}
-            <strong className="font-mono">
-              ৳
-              {result.balance.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-              })}
-            </strong>
-          </span>
         </div>
       )}
     </div>
@@ -164,15 +155,6 @@ function WithdrawForm() {
               })}
             </strong>
           </span>
-          <span>
-            New balance:{" "}
-            <strong className="font-mono">
-              ৳
-              {result.balance.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-              })}
-            </strong>
-          </span>
         </div>
       )}
     </div>
@@ -212,9 +194,6 @@ function TransferForm() {
         parseFloat(amount),
       );
       setResult({ from: res.fromAccount.balance, to: res.toAccount.balance });
-      toast.success(
-        `Transferred $${parseFloat(amount).toFixed(2)} successfully`,
-      );
       toast.success(
         `Transferred ৳${parseFloat(amount).toFixed(2)} successfully`,
       );
@@ -259,50 +238,30 @@ function TransferForm() {
         {loading ? "Processing..." : "Transfer"}
       </Button>
       {result && (
-        <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm space-y-1">
+        <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm space-y-2">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-accent" />
-            <span>
-              From balance:{" "}
-              <strong className="font-mono">
-                $
-                {result.from.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                })}
-              </strong>
-            </span>
+            <span className="font-semibold">Transfer successful</span>
           </div>
-          <div className="flex items-center gap-2 pl-6">
-            <span>
-              To balance:{" "}
-              <strong className="font-mono">
-                $
-                {result.to.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                })}
-              </strong>
-            </span>
-            <span>
-              From balance:{" "}
+          <div className="space-y-1 border-t border-accent/20 pt-2">
+            <div className="flex justify-between">
+              <span>From account balance:</span>
               <strong className="font-mono">
                 ৳
                 {result.from.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                 })}
               </strong>
-            </span>
-          </div>
-          <div className="flex items-center gap-2 pl-6">
-            <span>
-              To balance:{" "}
+            </div>
+            <div className="flex justify-between">
+              <span>To account balance:</span>
               <strong className="font-mono">
                 ৳
                 {result.to.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                 })}
               </strong>
-            </span>
-            t-mono{" "}
+            </div>
           </div>
         </div>
       )}

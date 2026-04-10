@@ -1,18 +1,23 @@
-import { LayoutDashboard, Users, ArrowLeftRight, Building2 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { cn } from "@/lib/utils";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import {
+  ArrowLeftRight,
+  Building2,
+  LayoutDashboard,
+  Users,
+} from "lucide-react";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -32,7 +37,12 @@ export function AppSidebar() {
           collapsed ? "items-center px-1.5" : "px-4",
         )}
       >
-        <div className={cn("flex w-full items-center", collapsed ? "justify-center" : "gap-3")}>
+        <div
+          className={cn(
+            "flex w-full items-center",
+            collapsed ? "justify-center" : "gap-3",
+          )}
+        >
           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 text-white shadow-[0_10px_30px_-12px_rgba(20,184,166,0.85)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.32),transparent_55%)]" />
             <Building2 className="relative z-10 h-5 w-5" />
@@ -41,9 +51,11 @@ export function AppSidebar() {
           {!collapsed && (
             <div>
               <h1 className="text-base font-bold tracking-tight text-sidebar-primary-foreground font-['Space_Grotesk']">
-                TakaLedger
+                Banking-Ledger
               </h1>
-              <p className="text-xs text-sidebar-foreground/60">Real-Time Banking</p>
+              <p className="text-xs text-sidebar-foreground/60">
+                Real-Time Banking
+              </p>
             </div>
           )}
         </div>
