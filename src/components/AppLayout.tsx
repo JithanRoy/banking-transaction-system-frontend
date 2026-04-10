@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { Wifi, WifiOff } from "lucide-react";
+import type { Account } from "@/lib/api";
 
 interface SocketContextType {
   connected: boolean;
@@ -16,6 +17,16 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType>({ connected: false, events: [] });
 export const useSocketContext = () => useContext(SocketContext);
 
+function normalizeAccountId(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim().toUpperCase() : null;
+}
+
+function normalizeBalance(value: unknown): string | null {
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return null;
+}
+
 export default function AppLayout() {
   const { connected, events } = useSocket();
   const queryClient = useQueryClient();
@@ -23,13 +34,33 @@ export default function AppLayout() {
   useEffect(() => {
     if (events.length === 0) return;
     const latest = events[0];
+    const accountId = normalizeAccountId(latest.data.accountId);
+    const balance = normalizeBalance(latest.data.balance);
+
+    const updateAccountCache = () => {
+      if (!accountId || balance === null) return;
+
+      queryClient.setQueryData<Account[]>(["accounts"], (current) =>
+        current?.map((account) =>
+          account.account_id === accountId ? { ...account, balance } : account,
+        ) ?? current,
+      );
+
+      queryClient.setQueryData<Account | undefined>(["account", accountId], (current) =>
+        current ? { ...current, balance } : current,
+      );
+    };
 
     if (latest.event === "transaction:created") {
+      updateAccountCache();
       toast.success("Transaction completed", {
-        description: `${(latest.data.type as string) || "Transaction"} of $${latest.data.amount} on ${latest.data.accountId}`,
+        description: `${(latest.data.type as string) || "Transaction"} of ৳${latest.data.amount} on ${latest.data.accountId}`,
       });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
       queryClient.invalidateQueries({ queryKey: ["account"] });
     } else if (latest.event === "balance:updated") {
+      updateAccountCache();
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
       queryClient.invalidateQueries({ queryKey: ["account"] });
     } else if (latest.event === "transaction:failed") {
       toast.error("Transaction failed", {

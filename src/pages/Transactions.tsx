@@ -37,7 +37,7 @@ function DepositForm() {
     try {
       const res = await api.deposit(accountId.trim(), parseFloat(amount));
       setResult({ balance: res.balance! });
-      toast.success(`Deposited $${parseFloat(amount).toFixed(2)} successfully`);
+      toast.success(`Deposited ৳${parseFloat(amount).toFixed(2)} successfully`);
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
       toast.error((err as ApiError).error || "Deposit failed");
@@ -82,6 +82,15 @@ function DepositForm() {
               })}
             </strong>
           </span>
+          <span>
+            New balance:{" "}
+            <strong className="font-mono">
+              ৳
+              {result.balance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+              })}
+            </strong>
+          </span>
         </div>
       )}
     </div>
@@ -105,7 +114,7 @@ function WithdrawForm() {
     try {
       const res = await api.withdraw(accountId.trim(), parseFloat(amount));
       setResult({ balance: res.balance! });
-      toast.success(`Withdrew $${parseFloat(amount).toFixed(2)} successfully`);
+      toast.success(`Withdrew ৳${parseFloat(amount).toFixed(2)} successfully`);
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
       toast.error((err as ApiError).error || "Withdrawal failed");
@@ -155,6 +164,15 @@ function WithdrawForm() {
               })}
             </strong>
           </span>
+          <span>
+            New balance:{" "}
+            <strong className="font-mono">
+              ৳
+              {result.balance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+              })}
+            </strong>
+          </span>
         </div>
       )}
     </div>
@@ -181,7 +199,7 @@ function TransferForm() {
       toast.error("All fields required with a positive amount");
       return;
     }
-    if (fromId.trim() === toId.trim()) {
+    if (fromId.trim().toUpperCase() === toId.trim().toUpperCase()) {
       toast.error("Source and destination must differ");
       return;
     }
@@ -196,6 +214,9 @@ function TransferForm() {
       setResult({ from: res.fromAccount.balance, to: res.toAccount.balance });
       toast.success(
         `Transferred $${parseFloat(amount).toFixed(2)} successfully`,
+      );
+      toast.success(
+        `Transferred ৳${parseFloat(amount).toFixed(2)} successfully`,
       );
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
@@ -261,6 +282,27 @@ function TransferForm() {
                 })}
               </strong>
             </span>
+            <span>
+              From balance:{" "}
+              <strong className="font-mono">
+                ৳
+                {result.from.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 pl-6">
+            <span>
+              To balance:{" "}
+              <strong className="font-mono">
+                ৳
+                {result.to.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </strong>
+            </span>
+            t-mono{" "}
           </div>
         </div>
       )}
