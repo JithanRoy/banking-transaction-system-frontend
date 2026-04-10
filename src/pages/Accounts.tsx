@@ -1,21 +1,16 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { api, Account, ApiError } from "@/lib/api";
-import { Plus, Search, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -24,6 +19,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Account, api, ApiError } from "@/lib/api";
+import { ArrowRight, Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Accounts() {
   const navigate = useNavigate();
@@ -44,7 +44,8 @@ export default function Accounts() {
       const acc = await api.getAccount(searchId.trim());
       setAccounts((prev) => {
         const exists = prev.find((a) => a.account_id === acc.account_id);
-        if (exists) return prev.map((a) => (a.account_id === acc.account_id ? acc : a));
+        if (exists)
+          return prev.map((a) => (a.account_id === acc.account_id ? acc : a));
         return [acc, ...prev];
       });
     } catch (err) {
@@ -86,7 +87,7 @@ export default function Accounts() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Accounts</h1>
@@ -159,7 +160,11 @@ export default function Accounts() {
               onChange={(e) => setSearchId(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchAccount()}
             />
-            <Button onClick={searchAccount} disabled={loading} variant="secondary">
+            <Button
+              onClick={searchAccount}
+              disabled={loading}
+              variant="secondary"
+            >
               <Search className="h-4 w-4 mr-1.5" />
               {loading ? "Searching..." : "Search"}
             </Button>
@@ -187,12 +192,19 @@ export default function Accounts() {
                     className="cursor-pointer"
                     onClick={() => navigate(`/accounts/${acc.account_id}`)}
                   >
-                    <TableCell className="font-mono font-medium">{acc.account_id}</TableCell>
+                    <TableCell className="font-mono font-medium">
+                      {acc.account_id}
+                    </TableCell>
                     <TableCell>{acc.holder_name}</TableCell>
                     <TableCell className="text-right font-mono">
-                      ${parseFloat(acc.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      $
+                      {parseFloat(acc.balance).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                      })}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">{acc.version}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {acc.version}
+                    </TableCell>
                     <TableCell>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </TableCell>

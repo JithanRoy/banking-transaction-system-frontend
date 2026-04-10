@@ -1,13 +1,24 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, ApiError } from "@/lib/api";
-import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, CheckCircle2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowDownCircle,
+  ArrowLeftRight,
+  ArrowUpCircle,
+  CheckCircle2,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 function DepositForm() {
   const [accountId, setAccountId] = useState("");
@@ -39,11 +50,22 @@ function DepositForm() {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Account ID</Label>
-        <Input placeholder="e.g. ACC1001" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
+        <Input
+          placeholder="e.g. ACC1001"
+          value={accountId}
+          onChange={(e) => setAccountId(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
         <Label>Amount</Label>
-        <Input type="number" min="0.01" step="0.01" placeholder="e.g. 500" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Input
+          type="number"
+          min="0.01"
+          step="0.01"
+          placeholder="e.g. 500"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
       </div>
       <Button onClick={submit} disabled={loading} className="w-full">
         {loading ? "Processing..." : "Deposit"}
@@ -51,7 +73,15 @@ function DepositForm() {
       {result && (
         <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm">
           <CheckCircle2 className="h-4 w-4 text-accent" />
-          <span>New balance: <strong className="font-mono">${result.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+          <span>
+            New balance:{" "}
+            <strong className="font-mono">
+              $
+              {result.balance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+              })}
+            </strong>
+          </span>
         </div>
       )}
     </div>
@@ -88,19 +118,43 @@ function WithdrawForm() {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Account ID</Label>
-        <Input placeholder="e.g. ACC1001" value={accountId} onChange={(e) => setAccountId(e.target.value)} />
+        <Input
+          placeholder="e.g. ACC1001"
+          value={accountId}
+          onChange={(e) => setAccountId(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
         <Label>Amount</Label>
-        <Input type="number" min="0.01" step="0.01" placeholder="e.g. 250" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Input
+          type="number"
+          min="0.01"
+          step="0.01"
+          placeholder="e.g. 250"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
       </div>
-      <Button onClick={submit} disabled={loading} variant="destructive" className="w-full">
+      <Button
+        onClick={submit}
+        disabled={loading}
+        variant="destructive"
+        className="w-full"
+      >
         {loading ? "Processing..." : "Withdraw"}
       </Button>
       {result && (
         <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm">
           <CheckCircle2 className="h-4 w-4 text-accent" />
-          <span>New balance: <strong className="font-mono">${result.balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+          <span>
+            New balance:{" "}
+            <strong className="font-mono">
+              $
+              {result.balance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+              })}
+            </strong>
+          </span>
         </div>
       )}
     </div>
@@ -112,11 +166,18 @@ function TransferForm() {
   const [toId, setToId] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ from: number; to: number } | null>(null);
+  const [result, setResult] = useState<{ from: number; to: number } | null>(
+    null,
+  );
   const qc = useQueryClient();
 
   const submit = async () => {
-    if (!fromId.trim() || !toId.trim() || !amount.trim() || parseFloat(amount) <= 0) {
+    if (
+      !fromId.trim() ||
+      !toId.trim() ||
+      !amount.trim() ||
+      parseFloat(amount) <= 0
+    ) {
       toast.error("All fields required with a positive amount");
       return;
     }
@@ -127,9 +188,15 @@ function TransferForm() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await api.transfer(fromId.trim(), toId.trim(), parseFloat(amount));
+      const res = await api.transfer(
+        fromId.trim(),
+        toId.trim(),
+        parseFloat(amount),
+      );
       setResult({ from: res.fromAccount.balance, to: res.toAccount.balance });
-      toast.success(`Transferred $${parseFloat(amount).toFixed(2)} successfully`);
+      toast.success(
+        `Transferred $${parseFloat(amount).toFixed(2)} successfully`,
+      );
       qc.invalidateQueries({ queryKey: ["account"] });
     } catch (err) {
       toast.error((err as ApiError).error || "Transfer failed");
@@ -142,15 +209,30 @@ function TransferForm() {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>From Account</Label>
-        <Input placeholder="e.g. ACC1001" value={fromId} onChange={(e) => setFromId(e.target.value)} />
+        <Input
+          placeholder="e.g. ACC1001"
+          value={fromId}
+          onChange={(e) => setFromId(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
         <Label>To Account</Label>
-        <Input placeholder="e.g. ACC1002" value={toId} onChange={(e) => setToId(e.target.value)} />
+        <Input
+          placeholder="e.g. ACC1002"
+          value={toId}
+          onChange={(e) => setToId(e.target.value)}
+        />
       </div>
       <div className="space-y-2">
         <Label>Amount</Label>
-        <Input type="number" min="0.01" step="0.01" placeholder="e.g. 100" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Input
+          type="number"
+          min="0.01"
+          step="0.01"
+          placeholder="e.g. 100"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
       </div>
       <Button onClick={submit} disabled={loading} className="w-full">
         {loading ? "Processing..." : "Transfer"}
@@ -159,10 +241,26 @@ function TransferForm() {
         <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm space-y-1">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-accent" />
-            <span>From balance: <strong className="font-mono">${result.from.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+            <span>
+              From balance:{" "}
+              <strong className="font-mono">
+                $
+                {result.from.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </strong>
+            </span>
           </div>
           <div className="flex items-center gap-2 pl-6">
-            <span>To balance: <strong className="font-mono">${result.to.toLocaleString("en-US", { minimumFractionDigits: 2 })}</strong></span>
+            <span>
+              To balance:{" "}
+              <strong className="font-mono">
+                $
+                {result.to.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </strong>
+            </span>
           </div>
         </div>
       )}
@@ -172,7 +270,7 @@ function TransferForm() {
 
 export default function Transactions() {
   return (
-    <div className="space-y-6 max-w-xl">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -197,9 +295,13 @@ export default function Transactions() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Deposit Funds</CardTitle>
-              <CardDescription>Add money to an existing account</CardDescription>
+              <CardDescription>
+                Add money to an existing account
+              </CardDescription>
             </CardHeader>
-            <CardContent><DepositForm /></CardContent>
+            <CardContent>
+              <DepositForm />
+            </CardContent>
           </Card>
         </TabsContent>
 
@@ -209,7 +311,9 @@ export default function Transactions() {
               <CardTitle className="text-base">Withdraw Funds</CardTitle>
               <CardDescription>Withdraw money from an account</CardDescription>
             </CardHeader>
-            <CardContent><WithdrawForm /></CardContent>
+            <CardContent>
+              <WithdrawForm />
+            </CardContent>
           </Card>
         </TabsContent>
 
@@ -219,7 +323,9 @@ export default function Transactions() {
               <CardTitle className="text-base">Transfer Funds</CardTitle>
               <CardDescription>Move money between two accounts</CardDescription>
             </CardHeader>
-            <CardContent><TransferForm /></CardContent>
+            <CardContent>
+              <TransferForm />
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
